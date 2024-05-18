@@ -1,34 +1,37 @@
 const fs = require("fs");
 
-const filePath = "./invalid.json";
+function readAndParseJSON(filePath) {
+  try {
+    const jsonData = fs.readFileSync(filePath, "utf8");
+    const parsedData = JSON.parse(jsonData);
 
-fs.readFile(filePath, "utf8", (err, data) => {
-  if (err) {
-    console.error(`Error reading file ${filePath}: ${err}`);
+    if (
+      typeof parsedData.name === "undefined" ||
+      typeof parsedData.age === "undefined"
+    ) {
+      console.log("Missing required data in the JSON file.");
+      return;
+    }
+
+    console.log(JSON.stringify(parsedData));
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      console.log(
+        "Invalid JSON file format. Please provide a valid JSON file."
+      );
+    } else {
+      console.log(`Error reading the file: ${error.message}`);
+    }
+  }
+}
+
+if (require.main === module) {
+  const filePath = process.argv[2];
+  if (!filePath) {
+    console.log("Please provide a JSON file path.");
     return;
   }
+  readAndParseJSON(filePath);
+}
 
-  try {
-    const jsonData = JSON.parse(data);
-
-    // Check if jsonData is an array or object
-    if (!Array.isArray(jsonData) && typeof jsonData !== "object") {
-      throw new Error(
-        "Invalid JSON file format. JSON data must be an array or object."
-      );
-    }
-
-    // Check if required data is missing
-    if (!jsonData.hasOwnProperty("age")) {
-      throw new Error('Missing required data: "users" array/object not found.');
-    }
-
-    console.log("JSON file read successfully:", jsonData);
-    // TODO: Perform error handling for invalid file format and missing data
-  } catch (err) {
-    console.error(
-      "Invalid JSON file format. Please provide a valid JSON file.",
-      err.message
-    );
-  }
-});
+module.exports = { readAndParseJSON };
